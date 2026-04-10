@@ -14,14 +14,14 @@ import {
   TrendingUp, TrendingDown, DollarSign, Menu, X, Calendar, 
   Settings, CheckCircle, UserPlus, Trash2, Wallet, Plus, 
   Phone, Landmark, Banknote, AlertCircle, Save, Download,
-  Cloud, Lock, Mail, LogOut, KeyRound, LineChart
+  Cloud, Lock, Mail, LogOut, KeyRound, LineChart, Percent
 } from 'lucide-react';
 
 /**
- * JUAN SANTOS BUSINESS - GESTIÓN DE DIVISAS CLOUD v4.2
- * - Mejoras: Cálculo de Spread (Margen) y Ganancia Real.
- * - Seguridad: Recuperación de contraseña por Email.
- * - Marca: Juan Santos Business.
+ * JUAN SANTOS BUSINESS v4.3 - INTELIGENCIA FINANCIERA
+ * - Cálculo de Spread (Margen Real)
+ * - Recuperación de Contraseña via Email
+ * - Gestión de Inventario DOP/USD en Nube
  */
 
 // --- CONFIGURACIÓN E INICIALIZACIÓN ---
@@ -30,7 +30,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'juansantos-crm-pro';
+// Saneamos el appId para Firebase (Segmentos planos)
+const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'juansantos-business-pro';
 const appId = rawAppId.split('_src')[0].split('/')[0];
 
 const DOMINICAN_BANKS = [
@@ -39,99 +40,84 @@ const DOMINICAN_BANKS = [
   "Asociación Cibao", "Banco Promerica", "Banco JMMB"
 ];
 
-// --- COMPONENTE DE ACCESO (LOGIN + RECUPERACIÓN) ---
+// --- COMPONENTE DE ACCESO (LOGIN + RESET) ---
 
-const LoginPage = ({ isRegistering, setIsRegistering, email, setEmail, password, setPassword, error, loading, handleAuth }) => {
-  const [resetSent, setResetSent] = useState(false);
-  const [authError, setAuthError] = useState(error);
+const LoginPage = ({ isRegistering, setIsRegistering, handleAuth, email, setEmail, password, setPassword, error, loading }) => {
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
 
-  const handleResetPassword = async () => {
+  const handleReset = async () => {
     if (!email) {
-      setAuthError("Ingresa tu correo para recuperar la contraseña");
+      alert("Por favor, ingresa tu correo electrónico primero.");
       return;
     }
+    setResetLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
-      setResetSent(true);
-      setAuthError("");
+      setResetMessage("¡Enlace enviado! Revisa tu bandeja de entrada.");
     } catch (err) {
-      setAuthError("Error al enviar correo de recuperación");
+      setResetMessage("Error al enviar el correo. Verifica el email.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
       <div className="bg-white rounded-[3rem] w-full max-w-md p-10 shadow-2xl animate-in zoom-in duration-300">
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center mb-8">
           <div className="bg-blue-600 p-4 rounded-3xl text-white mb-4 shadow-xl">
             <Lock size={40} />
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none italic">JS Business</h1>
-          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mt-2 text-center">Acceso Inteligente Cloud</p>
+          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.3em] mt-2">Seguridad Cloud activa</p>
         </div>
 
-        {resetSent ? (
-          <div className="text-center space-y-6">
-            <div className="bg-emerald-50 p-6 rounded-3xl text-emerald-600">
-               <CheckCircle size={40} className="mx-auto mb-3" />
-               <p className="font-black text-xs uppercase tracking-widest">Enlace Enviado</p>
-               <p className="text-sm font-bold mt-2">Revisa tu correo para restablecer tu acceso.</p>
+        <form onSubmit={handleAuth} className="space-y-6">
+          {error && (
+            <div className="bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl text-rose-600 text-[10px] font-black uppercase flex items-center gap-2">
+              <AlertCircle size={16} /> {String(error)}
             </div>
-            <button onClick={() => setResetSent(false)} className="text-[10px] font-black text-blue-600 uppercase underline">Volver al inicio</button>
+          )}
+          {resetMessage && (
+            <div className="bg-emerald-50 border-2 border-emerald-100 p-4 rounded-2xl text-emerald-600 text-[10px] font-black uppercase text-center">
+              {resetMessage}
+            </div>
+          )}
+          
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Correo de Usuario</label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+              <input required type="email" value={email} onChange={e => setEmail(e.target.value)} 
+                className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold transition-all" 
+                placeholder="juan@jsbusiness.com" />
+            </div>
           </div>
-        ) : (
-          <form onSubmit={handleAuth} className="space-y-6">
-            {(authError || error) && (
-              <div className="bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl text-rose-600 text-[10px] font-black uppercase flex items-center gap-2">
-                <AlertCircle size={16} /> {String(authError || error)}
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email de Usuario</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                <input required type="email" value={email} onChange={e => setEmail(e.target.value)} 
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold transition-all" 
-                  placeholder="juan@jsbusiness.com" />
-              </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-center px-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contraseña</label>
+              <button type="button" onClick={handleReset} className="text-[9px] font-black text-blue-600 hover:underline">
+                {resetLoading ? "..." : "¿OLVIDASTE TU CLAVE?"}
+              </button>
             </div>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+              <input required type="password" value={password} onChange={e => setPassword(e.target.value)} 
+                className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold transition-all" 
+                placeholder="••••••••" />
+            </div>
+          </div>
 
-            {!isRegistering && (
-              <div className="space-y-2">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Contraseña</label>
-                  <button type="button" onClick={handleResetPassword} className="text-[10px] font-black text-blue-500 hover:underline">¿LA OLVIDASTE?</button>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                  <input required type="password" value={password} onChange={e => setPassword(e.target.value)} 
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold transition-all" 
-                    placeholder="••••••••" />
-                </div>
-              </div>
-            )}
-
-            {isRegistering && (
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Crear Contraseña</label>
-                <input required type="password" value={password} onChange={e => setPassword(e.target.value)} 
-                  className="w-full px-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold" 
-                  placeholder="Mínimo 6 caracteres" />
-              </div>
-            )}
-
-            <button disabled={loading} type="submit" className="w-full bg-slate-900 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all active:scale-95 disabled:opacity-50">
-              {loading ? "Verificando..." : isRegistering ? "Registrar Mi Negocio" : "Entrar a Juan Santos"}
-            </button>
-          </form>
-        )}
-
-        {!resetSent && (
-          <button onClick={() => setIsRegistering(!isRegistering)} className="w-full mt-8 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline text-center">
-            {isRegistering ? "¿Ya tienes acceso? Entra aquí" : "¿Nuevo socio? Regístrate aquí"}
+          <button disabled={loading} type="submit" className="w-full bg-slate-900 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all active:scale-95 disabled:opacity-50">
+            {loading ? "Verificando..." : isRegistering ? "Crear Mi Cuenta Business" : "Iniciar Sesión"}
           </button>
-        )}
+        </form>
+
+        <button onClick={() => setIsRegistering(!isRegistering)} className="w-full mt-8 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline text-center">
+          {isRegistering ? "¿Ya tienes cuenta? Entra aquí" : "¿Eres nuevo socio? Regístrate aquí"}
+        </button>
       </div>
     </div>
   );
@@ -152,7 +138,7 @@ const StatCard = ({ title, val, icon, color, action, actionLabel, subtext }) => 
        <div className="space-y-2 leading-none">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 leading-none">{String(title)}</p>
           <p className="text-3xl font-black tracking-tighter leading-none mt-1">{String(val)}</p>
-          {subtext && <p className="text-[9px] font-bold opacity-50 mt-2 uppercase">{String(subtext)}</p>}
+          {subtext && <p className="text-[9px] font-bold opacity-50 mt-2 uppercase tracking-widest">{String(subtext)}</p>}
        </div>
        <div className="bg-slate-400/10 p-3 rounded-[1.2rem] group-hover:scale-110 transition-transform leading-none">{icon}</div>
     </div>
@@ -175,7 +161,7 @@ const App = () => {
   const [showModal, setShowModal] = useState(null); 
   const [errorMsg, setErrorMsg] = useState(null);
   
-  // Login State
+  // States
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -190,29 +176,28 @@ const App = () => {
   const [tempCapital, setTempCapital] = useState({ dop: "", usd: "" });
   const [isEditingRates, setIsEditingRates] = useState(false);
 
-  // --- LÓGICA FINANCIERA: SPREAD Y GANANCIA ---
+  // --- LÓGICA DE SPREAD Y GANANCIA ---
   const financialStats = useMemo(() => {
-    // 1. Calcular Costo Promedio Ponderado de USD en inventario
-    // (A qué precio compramos los dólares que tenemos hoy)
-    const buys = transactions.filter(t => t.type === 'compra');
-    const totalUSDIn = buys.reduce((acc, t) => acc + Number(t.amount), 0);
-    const totalDOPOut = buys.reduce((acc, t) => acc + Number(t.total), 0);
-    const avgCostPerUSD = totalUSDIn > 0 ? totalDOPOut / totalUSDIn : rates.buy;
+    // 1. Costo Promedio Ponderado de Compra
+    const compras = transactions.filter(t => t.type === 'compra');
+    const totalUSDIn = compras.reduce((acc, t) => acc + Number(t.amount), 0);
+    const totalDOPOut = compras.reduce((acc, t) => acc + Number(t.total), 0);
+    const avgBuyPrice = totalUSDIn > 0 ? totalDOPOut / totalUSDIn : rates.buy;
 
-    // 2. Calcular Ganancia Bruta Real (Diferencia entre precio venta y costo compra promedio)
-    const sells = transactions.filter(t => t.type === 'venta');
-    const grossProfit = sells.reduce((acc, t) => acc + (Number(t.amount) * (Number(t.rate) - avgCostPerUSD)), 0);
+    // 2. Ganancia Bruta (Ventas vs Costo de Compra Promedio)
+    const ventas = transactions.filter(t => t.type === 'venta');
+    const totalUSDOut = ventas.reduce((acc, t) => acc + Number(t.amount), 0);
+    const grossProfit = ventas.reduce((acc, t) => acc + (Number(t.amount) * (Number(t.rate) - avgBuyPrice)), 0);
 
-    // 3. Spread Promedio (Margen ganado por cada USD vendido)
-    const totalUSDVendido = sells.reduce((acc, t) => acc + Number(t.amount), 0);
-    const avgSpread = totalUSDVendido > 0 ? grossProfit / totalUSDVendido : 0;
+    // 3. Spread Promedio (RD$ ganado por cada USD vendido)
+    const avgSpread = totalUSDOut > 0 ? grossProfit / totalUSDOut : (rates.sell - rates.buy);
 
     return {
       grossProfit,
       avgSpread,
-      avgCostPerUSD,
+      avgBuyPrice,
       totalComprado: totalUSDIn,
-      totalVendido: totalUSDVendido
+      totalVendido: totalUSDOut
     };
   }, [transactions, rates]);
 
@@ -235,20 +220,20 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // --- 2. SINCRONIZACIÓN CLOUD ---
+  // --- 2. SINCRONIZACIÓN ---
   useEffect(() => {
     if (!user || !businessAuth) return;
 
     const qClients = collection(db, 'artifacts', appId, 'public', 'data', 'clients');
     const unsubClients = onSnapshot(qClients, (snapshot) => {
       setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (err) => console.error("Error Clientes:", err.message));
+    });
 
     const qTx = collection(db, 'artifacts', appId, 'public', 'data', 'transactions');
     const unsubTx = onSnapshot(qTx, (snapshot) => {
       const txData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTransactions(txData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
-    }, (err) => console.error("Error Transacciones:", err.message));
+    });
 
     const docConfig = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
     const unsubConfig = onSnapshot(docConfig, (snapshot) => {
@@ -259,7 +244,7 @@ const App = () => {
       } else {
         setDoc(docConfig, { balance: { dop: 0, usd: 0 }, rates: { buy: 58.50, sell: 59.35 } });
       }
-    }, (err) => console.error("Error Config:", err.message));
+    });
 
     return () => {
       unsubClients();
@@ -268,7 +253,7 @@ const App = () => {
     };
   }, [user, businessAuth]);
 
-  // --- ACCIONES ---
+  // --- FUNCIONES ---
 
   const handleManualAuth = async (e) => {
     e.preventDefault();
@@ -282,14 +267,14 @@ const App = () => {
       }
       setBusinessAuth(true);
     } catch (err) {
-      setAuthError("Error de acceso: Credenciales inválidas.");
+      setAuthError("Email o contraseña incorrectos.");
     } finally {
       setAuthLoading(false);
     }
   };
 
   const handleLogout = () => {
-    if (window.confirm("¿Deseas salir del sistema Juan Santos Business?")) {
+    if (window.confirm("¿Seguro que deseas salir de Juan Santos Business?")) {
       setBusinessAuth(false);
       signOut(auth);
     }
@@ -303,7 +288,7 @@ const App = () => {
 
   const deleteTransaction = async (id) => {
     if (!user) return;
-    if (window.confirm("¿Seguro que desea eliminar esta operación? Se ajustará el inventario automáticamente.")) {
+    if (window.confirm("¿Eliminar operación? El inventario se ajustará automáticamente.")) {
       const tx = transactions.find(t => t.id === id);
       if (tx) {
         let newDop = balance.dop;
@@ -321,30 +306,17 @@ const App = () => {
     }
   };
 
-  const handleUpdateCapital = async (e) => {
-    e.preventDefault();
-    const newBalance = {
-      dop: balance.dop + (parseFloat(tempCapital.dop) || 0),
-      usd: balance.usd + (parseFloat(tempCapital.usd) || 0)
-    };
-    await saveGlobalSettings(newBalance, rates);
-    setTempCapital({ dop: "", usd: "" });
-    setShowModal(null);
-  };
-
   const exportToCSV = () => {
-    const headers = ["Fecha", "Cliente", "Telefono", "Tipo", "Monto USD", "Tasa", "Total DOP", "Metodo", "Banco"];
+    const headers = ["Fecha", "Cliente", "Telefono", "Tipo", "USD$", "Tasa", "RD$ Total", "Pago", "Banco"];
     const rows = transactions.map(t => {
       const client = clients.find(c => c.id === t.clientId);
-      return [t.date, client?.name || 'Invitado', client?.phone || 'N/A', t.type.toUpperCase(), t.amount, t.rate, t.total, t.method.toUpperCase(), t.bank];
+      return [t.date, client?.name || 'Invitado', client?.phone || 'N/A', t.type, t.amount, t.rate, t.total, t.method, t.bank];
     });
-    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
+    const csv = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
     const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", `JS_Business_Contabilidad.csv`);
-    document.body.appendChild(link);
+    link.setAttribute("href", encodeURI(csv));
+    link.setAttribute("download", `JuanSantos_Business_Contabilidad.csv`);
     link.click();
-    document.body.removeChild(link);
   };
 
   if (loading) {
@@ -363,13 +335,13 @@ const App = () => {
       <LoginPage 
         isRegistering={isRegistering} 
         setIsRegistering={setIsRegistering}
+        handleAuth={handleManualAuth}
         email={email}
         setEmail={setEmail}
         password={password}
         setPassword={setPassword}
         error={authError}
         loading={authLoading}
-        handleAuth={handleManualAuth}
       />
     );
   }
@@ -381,7 +353,7 @@ const App = () => {
         <div className="p-8 flex items-center justify-between">
           {isSidebarOpen && (
             <div className="flex items-center gap-3 animate-in fade-in">
-              <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg">
+              <div className="bg-blue-600 p-2 rounded-xl text-white">
                 <DollarSign size={20} strokeWidth={4} />
               </div>
               <h1 className="text-xl font-black tracking-tighter uppercase leading-none italic">JS Business</h1>
@@ -393,7 +365,7 @@ const App = () => {
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-10">
-          <NavItem icon={<LayoutDashboard size={22}/>} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} isOpen={isSidebarOpen} />
+          <NavItem icon={<LayoutDashboard size={22}/>} label="Escritorio" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} isOpen={isSidebarOpen} />
           <NavItem icon={<Users size={22}/>} label="Clientes" active={activeTab === 'clients'} onClick={() => setActiveTab('clients')} isOpen={isSidebarOpen} />
           <NavItem icon={<ArrowLeftRight size={22}/>} label="Operaciones" active={activeTab === 'transactions'} onClick={() => setActiveTab('transactions')} isOpen={isSidebarOpen} />
         </nav>
@@ -401,21 +373,21 @@ const App = () => {
         <div className="p-6 space-y-4 border-t border-slate-800/50">
            <div className={`bg-emerald-500/10 p-4 rounded-2xl flex items-center gap-3 ${!isSidebarOpen && 'justify-center'}`}>
              <Cloud size={20} className="text-emerald-500" />
-             {isSidebarOpen && <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none">Cloud Sync OK</p>}
+             {isSidebarOpen && <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none">Cloud Sincronizado</p>}
            </div>
            <button onClick={handleLogout} className={`w-full flex items-center gap-3 p-4 rounded-2xl text-slate-400 hover:bg-rose-500 hover:text-white transition-all ${!isSidebarOpen && 'justify-center'}`}>
              <LogOut size={20} />
-             {isSidebarOpen && <span className="font-black text-[10px] uppercase tracking-widest">Salir</span>}
+             {isSidebarOpen && <span className="font-black text-[10px] uppercase tracking-widest">Cerrar Sesión</span>}
            </button>
         </div>
       </aside>
 
-      {/* CONTENIDO PRINCIPAL */}
+      {/* ÁREA DE CONTENIDO */}
       <main className={`flex-1 transition-all duration-500 ${isSidebarOpen ? 'ml-80' : 'ml-24'} p-6 md:p-12`}>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
           <div className="space-y-1">
              <h2 className="text-4xl font-black text-slate-900 tracking-tighter leading-none italic uppercase">Juan Santos Business</h2>
-             <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em]">Inteligencia Financiera</p>
+             <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.4em]">Dashboard de Inteligencia Financiera</p>
           </div>
           <button onClick={() => { setShowModal('transaction'); setErrorMsg(null); }} className="bg-blue-600 text-white px-10 py-5 rounded-[1.5rem] font-black text-xs tracking-[0.2em] hover:bg-blue-700 transition-all shadow-2xl shadow-blue-600/30 active:scale-95">
              NUEVA OPERACIÓN
@@ -424,23 +396,22 @@ const App = () => {
 
         {activeTab === 'dashboard' && (
           <div className="space-y-10 animate-in fade-in duration-500">
-            {/* CARDS DE BALANCE */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatCard title="Efectivo RD$" val={`RD$ ${balance.dop.toLocaleString()}`} icon={<Wallet size={20}/>} color="bg-white text-slate-900 border-slate-200 shadow-sm" action={() => setShowModal('update_capital')} actionLabel="+ FONDEO" />
-              <StatCard title="Inventario USD$" val={`$${balance.usd.toLocaleString()} USD`} icon={<TrendingUp size={20}/>} color="bg-emerald-50 text-emerald-600 border-emerald-100" action={() => setShowModal('update_capital')} actionLabel="+ STOCK" />
+              <StatCard title="Fondo en Pesos" val={`RD$ ${balance.dop.toLocaleString()}`} icon={<Wallet size={20}/>} color="bg-white text-slate-900 border-slate-200 shadow-sm" action={() => setShowModal('update_capital')} actionLabel="+ FONDEO" />
+              <StatCard title="Inventario Dólares" val={`$${balance.usd.toLocaleString()} USD`} icon={<TrendingUp size={20}/>} color="bg-emerald-50 text-emerald-600 border-emerald-100" action={() => setShowModal('update_capital')} actionLabel="+ STOCK" />
               <StatCard 
                 title="Ganancia Bruta" 
                 val={`RD$ ${financialStats.grossProfit.toLocaleString()}`} 
                 icon={<LineChart size={20}/>} 
-                color="bg-slate-900 text-white border-slate-800"
-                subtext={`Costo USD: RD$ ${financialStats.avgCostPerUSD.toFixed(2)}`}
+                color="bg-slate-900 text-white border-slate-800 shadow-xl"
+                subtext={`Costo USD: RD$ ${financialStats.avgBuyPrice.toFixed(2)}`}
               />
               <StatCard 
                 title="Spread Promedio" 
                 val={`RD$ ${financialStats.avgSpread.toFixed(2)}`} 
-                icon={<ArrowLeftRight size={20}/>} 
+                icon={<Percent size={20}/>} 
                 color="bg-blue-600 text-white border-blue-500 shadow-xl"
-                subtext="Por USD vendido"
+                subtext="RD$ por USD vendido"
               />
             </div>
 
@@ -475,16 +446,16 @@ const App = () => {
                 </div>
               </div>
 
-              {/* RECIENTES */}
-              <div className="lg:col-span-2 bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              {/* ÚLTIMAS OPERACIONES */}
+              <div className="lg:col-span-2 bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col font-bold">
                 <div className="p-10 border-b flex justify-between items-center bg-slate-50/30">
-                  <h3 className="font-black text-slate-800 flex items-center gap-3 uppercase text-[10px] tracking-widest leading-none"><Calendar size={20} className="text-blue-500" /> Operaciones de Hoy</h3>
-                  <button onClick={() => setActiveTab('transactions')} className="text-[10px] font-black text-blue-600 uppercase tracking-widest">VER HISTORIAL</button>
+                  <h3 className="font-black text-slate-800 flex items-center gap-3 uppercase text-[10px] tracking-widest leading-none"><Calendar size={20} className="text-blue-500" /> Movimientos Hoy</h3>
+                  <button onClick={() => setActiveTab('transactions')} className="text-[10px] font-black text-blue-600 uppercase tracking-widest">VER TODO</button>
                 </div>
-                <div className="overflow-x-auto flex-1 font-bold">
+                <div className="overflow-x-auto flex-1">
                   <table className="w-full text-left">
                     <thead className="bg-slate-50/80 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
-                      <tr><th className="p-8">Cliente</th><th className="p-8">Tipo</th><th className="p-8 text-right">Monto USD</th><th className="p-8"></th></tr>
+                      <tr><th className="p-8">Cliente</th><th className="p-8">Operación</th><th className="p-8 text-right">Monto USD</th><th className="p-8"></th></tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50 text-sm">
                       {transactions.slice(0, 6).map(t => (
@@ -496,7 +467,7 @@ const App = () => {
                           <td className="p-8">
                              <span className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase ${t.type === 'compra' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{String(t.type)}</span>
                           </td>
-                          <td className="p-8 text-right font-black text-slate-900 text-xl tracking-tight">${Number(t.amount).toLocaleString()}</td>
+                          <td className="p-8 text-right font-black text-slate-900 text-xl tracking-tight leading-none italic">${Number(t.amount).toLocaleString()}</td>
                           <td className="p-8 text-right">
                              <button onClick={() => deleteTransaction(t.id)} className="p-2 text-rose-300 hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100"><Trash2 size={18}/></button>
                           </td>
@@ -510,12 +481,12 @@ const App = () => {
           </div>
         )}
 
-        {/* MODAL AJUSTE DE STOCK */}
+        {/* MODAL STOCK */}
         {showModal === 'update_capital' && (
           <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div className="bg-white p-10 rounded-[3rem] w-full max-w-sm shadow-2xl border border-white animate-in zoom-in">
                <h3 className="text-3xl font-black text-slate-900 mb-6 tracking-tighter text-center uppercase leading-none italic">Sincronizar Stock</h3>
-               <div className="space-y-6 mb-8">
+               <div className="space-y-6 mb-8 font-bold">
                  <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 leading-none">Agregar RD$ Pesos</label>
                     <input type="number" step="0.01" className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none font-black text-xl text-center shadow-inner" value={tempCapital.dop} onChange={e => setTempCapital({...tempCapital, dop: e.target.value})} placeholder="RD$ 0.00" />
@@ -527,92 +498,26 @@ const App = () => {
                </div>
                <div className="flex gap-4">
                  <button onClick={() => setShowModal(null)} className="flex-1 py-4 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 transition-colors">Cancelar</button>
-                 <button onClick={handleUpdateCapital} className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Confirmar Cloud</button>
+                 <button onClick={async () => {
+                    const newBalance = {
+                      dop: balance.dop + (parseFloat(tempCapital.dop) || 0),
+                      usd: balance.usd + (parseFloat(tempCapital.usd) || 0)
+                    };
+                    await saveGlobalSettings(newBalance, rates);
+                    setTempCapital({ dop: "", usd: "" });
+                    setShowModal(null);
+                 }} className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Confirmar</button>
                </div>
             </div>
           </div>
         )}
 
-        {/* LISTADO CLIENTES */}
-        {activeTab === 'clients' && (
-          <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden animate-in slide-in-from-bottom-8 duration-700">
-             <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
-                <h3 className="text-3xl font-black text-slate-900 tracking-tighter leading-none uppercase italic font-sans">Base de Datos</h3>
-                <button onClick={() => setShowModal('client')} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl shadow-slate-900/10">
-                  <UserPlus size={18}/> REGISTRAR NUEVO
-                </button>
-             </div>
-             <table className="w-full text-left font-bold">
-                <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
-                   <tr><th className="p-8">Nombre Completo</th><th className="p-8">WhatsApp / Tel.</th><th className="p-8 text-center">Gestión</th></tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                   {clients.map(c => (
-                      <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
-                         <td className="p-8 font-black text-slate-900 text-lg leading-none">{String(c.name)}</td>
-                         <td className="p-8 flex items-center gap-2 font-bold text-slate-500 leading-none"><Phone size={14} className="text-blue-500" />{String(c.phone)}</td>
-                         <td className="p-8 text-center leading-none"><button className="text-blue-600 font-black text-[10px] uppercase tracking-widest hover:underline">Ver Historial</button></td>
-                      </tr>
-                   ))}
-                </tbody>
-             </table>
-          </div>
-        )}
-
-        {/* HISTORIAL MAESTRO */}
-        {activeTab === 'transactions' && (
-          <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden animate-in slide-in-from-bottom-8 duration-700">
-             <div className="p-10 border-b flex flex-col md:flex-row justify-between items-center bg-slate-50/30 gap-6">
-                <div className="space-y-1 text-center md:text-left">
-                   <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none italic italic">Historial Maestro</h3>
-                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Contabilidad Centralizada Business</p>
-                </div>
-                <div className="flex gap-3">
-                   <button onClick={exportToCSV} className="bg-emerald-600 text-white px-6 py-4 rounded-[1.2rem] font-black text-[10px] uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-emerald-600/20 hover:scale-105 transition-all">
-                     <Download size={18}/> Descargar CSV (Excel)
-                   </button>
-                   <button onClick={() => { if(window.confirm("¿BORRAR TODO?")) setTransactions([]) }} className="text-[10px] font-black text-rose-500 uppercase tracking-widest px-6 py-4 border border-rose-100 rounded-[1.2rem] hover:bg-rose-50 transition-all leading-none">LIMPIAR REGISTRO</button>
-                </div>
-             </div>
-             <div className="overflow-x-auto">
-               <table className="w-full text-left font-bold">
-                  <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
-                     <tr><th className="p-8">Fecha</th><th className="p-8">Cliente</th><th className="p-8 text-center">Forma Pago</th><th className="p-8 text-right">USD$</th><th className="p-8 text-right">Tasa</th><th className="p-8 text-right">Total RD$</th><th className="p-8"></th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                     {transactions.map(t => (
-                        <tr key={t.id} className="hover:bg-slate-50 group transition-colors">
-                           <td className="p-8 text-[10px] font-black text-slate-400 uppercase leading-tight">{String(t.date)}</td>
-                           <td className="p-8 leading-tight">
-                              <div className="font-black text-slate-900 text-lg mb-1">{String(clients.find(c => c.id === t.clientId)?.name || 'Invitado')}</div>
-                              <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase ${t.type === 'compra' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{String(t.type)}</span>
-                           </td>
-                           <td className="p-8">
-                              <div className="flex flex-col items-center gap-1">
-                                <span className="text-[10px] font-black uppercase text-slate-500 leading-none">{String(t.method)}</span>
-                                {t.method === 'transferencia' && <span className="text-[8px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md leading-none">{String(t.bank)}</span>}
-                              </div>
-                           </td>
-                           <td className="p-8 text-right font-black text-2xl text-slate-900 tracking-tighter leading-none">${Number(t.amount).toLocaleString()}</td>
-                           <td className="p-8 text-right font-bold text-slate-300 tracking-widest leading-none">{Number(t.rate).toFixed(2)}</td>
-                           <td className="p-8 text-right font-black text-slate-900 text-xl tracking-tight leading-none">RD$ {Number(t.total).toLocaleString()}</td>
-                           <td className="p-8 text-center">
-                              <button onClick={() => deleteTransaction(t.id)} className="p-3 text-rose-300 hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100"><Trash2 size={24}/></button>
-                           </td>
-                        </tr>
-                     ))}
-                  </tbody>
-               </table>
-            </div>
-          </div>
-        )}
-
-        {/* MODAL TRANSACCION */}
+        {/* MODAL OPERACIÓN */}
         {showModal === 'transaction' && (
           <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
              <div className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl border border-white animate-in zoom-in duration-200 overflow-hidden max-h-[90vh] overflow-y-auto font-bold">
                 <div className="p-6 bg-slate-50 border-b flex justify-between items-center sticky top-0 z-10">
-                   <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter italic">Operación JS Business</h3>
+                   <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter italic font-sans">Nueva Transacción</h3>
                    <button onClick={() => setShowModal(null)} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-full transition-colors"><X size={24}/></button>
                 </div>
                 <form className="p-8 space-y-6" onSubmit={async (e) => {
@@ -641,37 +546,37 @@ const App = () => {
                   await saveGlobalSettings(newBalance, rates);
                   setShowModal(null);
                 }}>
-                  {errorMsg && <div className="bg-rose-50 p-4 rounded-xl text-rose-600 text-xs font-black uppercase text-center border-2 border-rose-100 flex items-center justify-center gap-2"><AlertCircle size={14}/> {String(errorMsg)}</div>}
+                  {errorMsg && <div className="bg-rose-50 p-4 rounded-xl text-rose-600 text-xs font-black uppercase text-center flex items-center justify-center gap-2"><AlertCircle size={14}/> {String(errorMsg)}</div>}
                   
                   <div className="space-y-4">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Elegir Cliente</label>
-                    <select name="client" required className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm shadow-sm outline-none focus:border-blue-500 transition-all appearance-none">
-                      <option value="">Seleccionar de la lista</option>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Seleccionar Cliente</label>
+                    <select name="client" required className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm shadow-sm focus:border-blue-500 outline-none appearance-none transition-all">
+                      <option value="">Buscar de la lista...</option>
                       {clients.map(c => <option key={c.id} value={c.id}>{String(c.name)}</option>)}
                     </select>
 
                     <div className="grid grid-cols-2 gap-4">
                        <div className="space-y-2">
-                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Operación</label>
-                         <select name="type" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm shadow-sm outline-none focus:border-blue-500 transition-all appearance-none">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo de Operación</label>
+                         <select name="type" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm shadow-sm focus:border-blue-500 outline-none transition-all">
                             <option value="compra">Compra (Pesos Out)</option>
                             <option value="venta">Venta (Dólares Out)</option>
                          </select>
                        </div>
                        <div className="space-y-2">
-                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto USD</label>
-                         <input required name="amount" type="number" step="0.01" placeholder="0.00" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm shadow-sm outline-none focus:border-blue-500 transition-all" />
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto (USD$)</label>
+                         <input required name="amount" type="number" step="0.01" placeholder="0.00" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm shadow-sm focus:border-blue-500 outline-none transition-all" />
                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                        <div className="space-y-2">
-                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tasa RD$</label>
-                         <input required name="rate" type="number" step="0.01" defaultValue={rates.buy} className="w-full p-4 bg-blue-50 border-2 border-blue-200 rounded-2xl font-black text-xl text-blue-700 shadow-sm" />
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tasa Negociada RD$</label>
+                         <input required name="rate" type="number" step="0.01" defaultValue={rates.buy} className="w-full p-4 bg-blue-50 border-2 border-blue-200 rounded-2xl font-black text-xl text-blue-700 shadow-sm focus:border-blue-500 outline-none transition-all" />
                        </div>
                        <div className="space-y-2">
-                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Método</label>
-                         <select name="method" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm appearance-none shadow-sm outline-none focus:border-blue-500 transition-all">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Método de Liquidación</label>
+                         <select name="method" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm shadow-sm focus:border-blue-500 outline-none transition-all">
                             <option value="efectivo">Efectivo</option>
                             <option value="transferencia">Transferencia</option>
                          </select>
@@ -679,8 +584,8 @@ const App = () => {
                     </div>
 
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Banco (Solo Transferencia)</label>
-                       <input name="bank" list="dominican-banks" placeholder="Seleccionar Banco..." className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm shadow-sm outline-none focus:border-blue-500 transition-all" />
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Banco (Opcional)</label>
+                       <input name="bank" list="dominican-banks" placeholder="Selecciona banco dominicano..." className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-sm shadow-sm focus:border-blue-500 outline-none transition-all" />
                        <datalist id="dominican-banks">
                           {DOMINICAN_BANKS.map(b => <option key={b} value={b} />)}
                        </datalist>
@@ -688,11 +593,117 @@ const App = () => {
                   </div>
 
                   <div className="bg-slate-900 p-8 rounded-[2rem] text-white flex justify-between items-center shadow-2xl mt-4">
-                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Transacción</span>
-                     <span className="text-3xl font-black text-blue-400 tracking-tighter">RD$ ...</span>
+                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Estado Nube</span>
+                     <span className="text-xl font-bold text-blue-400 tracking-tighter uppercase">Listo para Sincronizar</span>
                   </div>
 
-                  <button type="submit" className="w-full bg-blue-600 text-white py-6 rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-blue-700 active:scale-95 transition-all">Sincronizar Operación</button>
+                  <button type="submit" className="w-full bg-blue-600 text-white py-6 rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-blue-700 active:scale-95 transition-all">Finalizar y Guardar</button>
+                </form>
+             </div>
+          </div>
+        )}
+
+        {/* TAB CLIENTES */}
+        {activeTab === 'clients' && (
+          <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden animate-in slide-in-from-bottom-8 duration-700">
+             <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+                <h3 className="text-3xl font-black text-slate-900 tracking-tighter leading-none uppercase italic">Base de Clientes</h3>
+                <button onClick={() => setShowModal('client')} className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+                  <UserPlus size={18}/> NUEVO CLIENTE
+                </button>
+             </div>
+             <table className="w-full text-left font-bold">
+                <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
+                   <tr><th className="p-8">Nombre Completo</th><th className="p-8">Teléfono / WhatsApp</th><th className="p-8 text-center">Gestión</th></tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                   {clients.map(c => (
+                      <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                         <td className="p-8 font-black text-slate-900 text-lg leading-none">{String(c.name)}</td>
+                         <td className="p-8 flex items-center gap-2 font-bold text-slate-500 leading-none"><Phone size={14} className="text-blue-500" />{String(c.phone)}</td>
+                         <td className="p-8 text-center leading-none"><button className="text-blue-600 font-black text-[10px] uppercase tracking-widest hover:underline transition-all">Ver Historial</button></td>
+                      </tr>
+                   ))}
+                </tbody>
+             </table>
+          </div>
+        )}
+
+        {/* TAB HISTORIAL */}
+        {activeTab === 'transactions' && (
+          <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden animate-in slide-in-from-bottom-8 duration-700">
+             <div className="p-10 border-b flex flex-col md:flex-row justify-between items-center bg-slate-50/30 gap-6">
+                <div className="space-y-1 text-center md:text-left">
+                   <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none italic">Contabilidad Business</h3>
+                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Registro histórico Cloud</p>
+                </div>
+                <div className="flex gap-3">
+                   <button onClick={exportToCSV} className="bg-emerald-600 text-white px-6 py-4 rounded-[1.2rem] font-black text-[10px] uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-emerald-600/20 hover:scale-105 transition-all">
+                     <Download size={18}/> Descargar CSV Excel
+                   </button>
+                   <button onClick={() => { if(window.confirm("¿Borrar todo?")) setTransactions([]) }} className="text-[10px] font-black text-rose-500 uppercase tracking-widest px-6 py-4 border border-rose-100 rounded-[1.2rem] hover:bg-rose-50 transition-all">BORRAR REGISTRO</button>
+                </div>
+             </div>
+             <div className="overflow-x-auto">
+               <table className="w-full text-left font-bold border-collapse">
+                  <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
+                     <tr><th className="p-8">Fecha</th><th className="p-8">Cliente</th><th className="p-8 text-center">Operación</th><th className="p-8 text-right">USD$</th><th className="p-8 text-right">Tasa</th><th className="p-8 text-right">RD$ Total</th><th className="p-8"></th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                     {transactions.map(t => (
+                        <tr key={t.id} className="hover:bg-slate-50 group transition-colors">
+                           <td className="p-8 text-[10px] font-black text-slate-400 uppercase leading-tight">{String(t.date)}</td>
+                           <td className="p-8 leading-tight">
+                              <div className="font-black text-slate-900 text-lg mb-1">{String(clients.find(c => c.id === t.clientId)?.name || 'Invitado')}</div>
+                              <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase ${t.type === 'compra' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{String(t.type)}</span>
+                           </td>
+                           <td className="p-8 text-center">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="text-[10px] font-black uppercase text-slate-500 leading-none">{String(t.method)}</span>
+                                {t.method === 'transferencia' && <span className="text-[8px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-md leading-none">{String(t.bank)}</span>}
+                              </div>
+                           </td>
+                           <td className="p-8 text-right font-black text-2xl text-slate-900 tracking-tighter leading-none">${Number(t.amount).toLocaleString()}</td>
+                           <td className="p-8 text-right font-bold text-slate-300 tracking-widest leading-none">{Number(t.rate).toFixed(2)}</td>
+                           <td className="p-8 text-right font-black text-slate-900 text-xl tracking-tight leading-none">RD$ {Number(t.total).toLocaleString()}</td>
+                           <td className="p-8 text-center">
+                              <button onClick={() => deleteTransaction(t.id)} className="p-3 text-rose-300 hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={24}/></button>
+                           </td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL REGISTRO CLIENTE */}
+        {showModal === 'client' && (
+          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+             <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl border border-white animate-in zoom-in duration-200 p-10 font-bold">
+                <h3 className="text-3xl font-black text-slate-900 mb-8 uppercase tracking-tighter italic">Nuevo Cliente Business</h3>
+                <form className="space-y-6" onSubmit={async (e) => {
+                  e.preventDefault();
+                  const form = e.target;
+                  await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'clients'), {
+                    name: form.name.value, phone: form.phone.value, createdAt: new Date().toISOString()
+                  });
+                  setShowModal(null);
+                }}>
+                   <div className="space-y-4">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 leading-none">Nombre Completo</label>
+                        <input required name="name" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-500 font-bold" placeholder="Ej: Pedro Santos" />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 leading-none">WhatsApp / Teléfono</label>
+                        <input required name="phone" className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-blue-500 font-bold" placeholder="Ej: 809-000-0000" />
+                      </div>
+                   </div>
+                   <div className="flex gap-4">
+                      <button type="button" onClick={() => setShowModal(null)} className="flex-1 py-4 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+                      <button type="submit" className="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Guardar en Nube</button>
+                   </div>
                 </form>
              </div>
           </div>
