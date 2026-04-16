@@ -16,12 +16,11 @@ import {
 } from 'lucide-react';
 
 /**
- * JUAN SANTOS BUSINESS v10.5 - CORPORATIVO PREMIUM
- * - Logo Corporativo SVG integrado.
- * - Impresión optimizada (una sola hoja).
- * - Eliminación de socios con advertencia.
- * - Reversión de stock contable al eliminar transacciones.
- * - Alta legibilidad y contraste.
+ * JUAN SANTOS BUSINESS FINANCIAL v11.0
+ * - Recibos limpios sin firmas (informativos).
+ * - Etiquetas actualizadas: "Número de Transacción".
+ * - Eliminación de versión en impresos.
+ * - Soporte total para celular, tablet y PC.
  */
 
 const firebaseConfig = {
@@ -36,7 +35,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const appId = 'js-business-cloud-v10-final'; 
+const appId = 'js-business-cloud-v11-final'; 
 
 // --- COMPONENTES ---
 
@@ -52,8 +51,8 @@ const LoginPage = ({ isRegistering, setIsRegistering, handleAuth, email, setEmai
       <div className="bg-white rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl border border-slate-100 animate-in zoom-in">
         <div className="flex flex-col items-center mb-8 text-center">
           <div className="bg-blue-600 p-4 rounded-3xl text-white mb-4 shadow-xl"><Lock size={32} /></div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">JS Business</h1>
-          <p className="text-slate-500 font-bold text-[9px] uppercase tracking-[0.4em] mt-2">Acceso Corporativo v10.5</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none text-center">Juan Santos<br/>Business Financial</h1>
+          <p className="text-slate-500 font-bold text-[9px] uppercase tracking-[0.4em] mt-4">Acceso Corporativo Seguro</p>
         </div>
         {resetSent ? (
           <div className="text-center p-6 bg-blue-50 rounded-2xl animate-in fade-in">
@@ -65,10 +64,10 @@ const LoginPage = ({ isRegistering, setIsRegistering, handleAuth, email, setEmai
             {error && <div className="bg-rose-50 p-4 rounded-2xl text-rose-600 text-[10px] font-black uppercase flex items-center gap-2 border border-rose-100 animate-pulse"><AlertCircle size={16} /> {error}</div>}
             <div className="space-y-1"><label className="text-[10px] font-black text-slate-950 uppercase tracking-widest ml-1">Email / Usuario</label><input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold text-sm shadow-inner" placeholder="juan@negocio.com" /></div>
             <div className="space-y-1"><div className="flex justify-between items-center"><label className="text-[10px] font-black text-slate-950 uppercase tracking-widest ml-1">Clave</label><button type="button" onClick={handleReset} className="text-[9px] font-black text-blue-600 hover:underline italic">¿Olvidaste la clave?</button></div><input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none font-bold text-sm shadow-inner" placeholder="••••••••" /></div>
-            <button disabled={loading} type="submit" className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all">{loading ? "Conectando..." : isRegistering ? "Registrar Negocio" : "Entrar al Sistema"}</button>
+            <button disabled={loading} type="submit" className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all">{loading ? "Conectando..." : isRegistering ? "Registrar Empresa" : "Entrar al Sistema"}</button>
           </form>
         )}
-        <button onClick={() => setIsRegistering(!isRegistering)} className="w-full mt-8 text-[10px] font-black text-blue-600 uppercase tracking-widest text-center hover:underline">{isRegistering ? "¿Ya tienes cuenta? Entra" : "¿Nuevo socio? Regístrate aquí"}</button>
+        <button onClick={() => setIsRegistering(!isRegistering)} className="w-full mt-8 text-[10px] font-black text-blue-600 uppercase tracking-widest text-center hover:underline">{isRegistering ? "¿Ya tienes cuenta? Entra" : "¿Nueva cuenta de empresa? Regístrate aquí"}</button>
       </div>
     </div>
   );
@@ -131,6 +130,10 @@ const App = () => {
     return () => { unsubC(); unsubT(); unsubG(); };
   }, [user, businessAuth]);
 
+  useEffect(() => {
+    if (window.innerWidth < 1024) setSidebarOpen(false);
+  }, [activeTab]);
+
   // --- ACCIONES ---
   const handleDeleteTransaction = async (tx) => {
     if (window.confirm(`⚠️ CONFIRMAR REVERSIÓN \n\nEsta operación devolverá el inventario y pesos a la caja automáticamente.`)) {
@@ -149,7 +152,7 @@ const App = () => {
   };
 
   const handleResetCapital = async () => {
-    if (window.confirm("🔴 ACCIÓN IRREVERSIBLE: ¿Deseas borrar TODO el capital (Caja y Stock) y ponerlo en CERO?")) {
+    if (window.confirm("🔴 ACCIÓN IRREVERSIBLE: ¿Deseas borrar TODO el capital y ponerlo en CERO?")) {
       await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), { balance: { dop: 0, usd: 0 } });
       setShowModal(null);
     }
@@ -195,7 +198,7 @@ const App = () => {
             {(isSidebarOpen || window.innerWidth >= 1024) && (
               <div className={`flex items-center gap-3 animate-in fade-in ${!isSidebarOpen && 'lg:hidden'}`}>
                 <div className="bg-blue-600 p-2 rounded-xl"><DollarSign size={20} /></div>
-                <h1 className="text-lg">JS BUSINESS</h1>
+                <h1 className="text-sm leading-tight">JUAN SANTOS<br/>BUSINESS FINANCIAL</h1>
               </div>
             )}
             <button onClick={() => setSidebarOpen(!isSidebarOpen)} className={`p-2 hover:bg-slate-800 rounded-xl transition-all ${!isSidebarOpen && 'mx-auto'}`}>{isSidebarOpen ? <X /> : <Menu />}</button>
@@ -213,8 +216,8 @@ const App = () => {
 
           <div className="bg-slate-900 p-6 sm:p-10 lg:p-12 rounded-[2.5rem] lg:rounded-[3.5rem] text-white shadow-2xl mb-8 lg:mb-12 flex flex-col lg:flex-row justify-between items-center gap-8 relative overflow-hidden group border border-slate-800">
              <div className="relative z-10 text-center lg:text-left w-full lg:w-auto">
-                <div className="flex items-center gap-2 mb-3 justify-center lg:justify-start"><div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div><span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Ledger Financial Active</span></div>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter uppercase leading-none italic">Juan Santos Business</h2>
+                <div className="flex items-center gap-2 mb-3 justify-center lg:justify-start"><div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div><span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Servicio en Línea</span></div>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter uppercase leading-none italic">Juan Santos Business Financial</h2>
                 <div className="mt-8 bg-white/5 p-5 rounded-[2rem] border border-white/10 flex flex-col sm:flex-row items-center gap-6 backdrop-blur-md">
                    <div>
                      <p className="text-[9px] uppercase font-black opacity-40 tracking-widest mb-1">Interés Ganado (ROI)</p>
@@ -228,8 +231,8 @@ const App = () => {
                 </div>
              </div>
              <div className="flex flex-col gap-3 relative z-10 w-full lg:w-auto">
-               <button onClick={exportCSV} className="w-full bg-emerald-600 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-lg"><Download size={18}/> Copia de Respaldo</button>
-               <button onClick={generateDailyReport} className="w-full bg-white/10 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-3 border border-white/10"><FileText size={18}/> Cierre Diario</button>
+               <button onClick={exportCSV} className="w-full bg-emerald-600 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-lg"><Download size={18}/> Exportar Datos</button>
+               <button onClick={generateDailyReport} className="w-full bg-white/10 text-white px-8 py-4 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all flex items-center justify-center gap-3 border border-white/10"><FileText size={18}/> Reporte Diario</button>
                <button onClick={() => setShowModal('transaction')} className="w-full bg-blue-600 text-white px-8 py-5 rounded-[1.5rem] font-black text-[10px] uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all hover:bg-blue-700 flex items-center justify-center gap-3"><Plus size={20} /> Registrar Cambio</button>
              </div>
           </div>
@@ -237,21 +240,21 @@ const App = () => {
           {activeTab === 'dashboard' && (
             <div className="space-y-8 animate-in fade-in">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 font-bold">
-                 <StatBox label="Caja DOP (Pesos)" value={`RD$ ${balance.dop.toLocaleString()}`} onAction={() => setShowModal('update_capital')} color="text-slate-950" icon={<Wallet size={16}/>} />
-                 <StatBox label="Stock USD (Dólares)" value={`$ ${balance.usd.toLocaleString()}`} onAction={() => setShowModal('update_capital')} color="text-slate-950" icon={<TrendingUp size={16}/>} />
+                 <StatBox label="Caja DOP" value={`RD$ ${balance.dop.toLocaleString()}`} onAction={() => setShowModal('update_capital')} color="text-slate-950" icon={<Wallet size={16}/>} />
+                 <StatBox label="Stock USD" value={`$ ${balance.usd.toLocaleString()}`} onAction={() => setShowModal('update_capital')} color="text-slate-950" icon={<TrendingUp size={16}/>} />
                  <div className="bg-emerald-500 p-8 rounded-[2.5rem] text-white shadow-xl flex flex-col justify-center hover:-translate-y-1 transition-all"><p className="text-[10px] uppercase opacity-80 font-black mb-1 tracking-widest">Utilidad Real</p><p className="text-2xl font-black tracking-tighter italic">RD$ {metrics.profit.toLocaleString()}</p></div>
                  <div className="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl flex flex-col justify-center hover:-translate-y-1 transition-all"><p className="text-[10px] uppercase opacity-80 font-black mb-1 tracking-widest text-center italic">Costo Promedio USD</p><p className="text-2xl font-black tracking-tighter italic text-center">RD$ {metrics.avgBuyCost.toFixed(2)}</p></div>
               </div>
               
               <div className="bg-white rounded-[2.5rem] border-2 border-slate-100 shadow-sm p-6 sm:p-10 font-bold">
                  <div className="flex justify-between items-center mb-10 border-l-4 border-blue-600 pl-4">
-                   <h3 className="text-sm sm:text-lg uppercase text-slate-950 font-black tracking-[0.2em]">Registro Maestro</h3>
+                   <h3 className="text-sm sm:text-lg uppercase text-slate-950 font-black tracking-[0.2em]">Últimas Operaciones</h3>
                    <button onClick={generateDailyReport} className="text-[10px] uppercase text-blue-600 font-black underline flex items-center gap-2"><Printer size={16}/> Imprimir Cierre</button>
                  </div>
                  <div className="overflow-x-auto"><table className="w-full text-left italic min-w-[800px]">
-                   <thead><tr className="text-slate-950 uppercase text-[10px] border-b-2 border-slate-100 tracking-widest font-black"><th className="pb-6 px-4">Cliente</th><th className="pb-6 text-center">Tipo</th><th className="pb-6 text-center">Método</th><th className="pb-6 text-right">Monto USD</th><th className="pb-6 text-right">Tasa Pactada</th><th className="pb-6 text-right">Total RD$</th><th className="pb-6 text-center">Gestión</th></tr></thead>
+                   <thead><tr className="text-slate-950 uppercase text-[10px] border-b-2 border-slate-100 tracking-widest font-black"><th className="pb-6 px-4">Socio</th><th className="pb-6 text-center">Tipo</th><th className="pb-6 text-center">Método</th><th className="pb-6 text-right">USD$</th><th className="pb-6 text-right">Tasa Real</th><th className="pb-6 text-right">RD$ Total</th><th className="pb-6 text-center">Acción</th></tr></thead>
                    <tbody className="divide-y divide-slate-50 text-sm text-slate-950">
-                     {transactions.slice(0, 10).map(t => (
+                     {transactions.slice(0, 8).map(t => (
                        <tr key={t.id} className="hover:bg-slate-50 transition-all font-black group">
                          <td className="py-6 px-4">{clients.find(c => c.id === t.clientId)?.name || 'Invitado'}<div className="text-[8px] text-slate-400 mt-1 font-bold not-italic">{t.date}</div></td>
                          <td className="text-center"><span className={`px-4 py-1.5 rounded-xl text-[9px] uppercase ${t.type === 'compra' ? 'bg-emerald-500 text-white shadow-md' : 'bg-blue-600 text-white shadow-md'}`}>{t.type}</span></td>
@@ -260,8 +263,8 @@ const App = () => {
                          <td className="py-6 text-right font-black text-slate-300">RD$ {Number(t.rate).toFixed(2)}</td>
                          <td className="py-6 text-right font-black text-xl text-blue-600">RD$ {Number(t.total).toLocaleString()}</td>
                          <td className="py-6 text-center flex justify-center gap-2">
-                           <button onClick={() => setPrintData({type: 'receipt', data: t})} className="p-2 text-slate-400 hover:text-blue-600 transition-colors" title="Imprimir Recibo"><Printer size={20}/></button>
-                           <button onClick={() => handleDeleteTransaction(t)} className="p-2 text-rose-300 hover:text-rose-600 transition-colors" title="Eliminar y Revertir"><Trash2 size={20}/></button>
+                           <button onClick={() => setPrintData({type: 'receipt', data: t})} className="p-2 text-slate-400 hover:text-blue-600 transition-colors" title="Imprimir"><Printer size={20}/></button>
+                           <button onClick={() => handleDeleteTransaction(t)} className="p-2 text-rose-300 hover:text-rose-600 transition-colors opacity-100 lg:opacity-0 group-hover:opacity-100" title="Eliminar"><Trash2 size={20}/></button>
                          </td>
                        </tr>
                      ))}
@@ -274,8 +277,8 @@ const App = () => {
           {showModal === 'transaction' && (
             <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
                <div className="bg-white rounded-t-[2.5rem] sm:rounded-[3rem] w-full max-w-xl shadow-2xl animate-in slide-in-from-bottom duration-300 p-8 sm:p-12 overflow-y-auto max-h-[95vh]">
-                  <div className="flex justify-between items-center mb-8 text-slate-950 font-black italic"><span className="text-2xl uppercase tracking-tighter">Ejecutar Transacción</span><button onClick={() => setShowModal(null)} className="p-2 bg-slate-50 hover:bg-rose-50 text-rose-500 rounded-full transition-all"><X/></button></div>
-                  <div className="flex justify-end mb-4"><button onClick={() => setIsAddingNewClient(!isAddingNewClient)} className="text-[10px] text-blue-600 underline uppercase flex items-center gap-1 font-black"><UserPlus size={14}/> {isAddingNewClient ? "Volver a Lista" : "Registrar Socio Rápido"}</button></div>
+                  <div className="flex justify-between items-center mb-8 text-slate-950 font-black italic"><span className="text-2xl uppercase tracking-tighter">Nueva Operación</span><button onClick={() => setShowModal(null)} className="p-2 bg-slate-50 hover:bg-rose-50 text-rose-500 rounded-full transition-all"><X/></button></div>
+                  <div className="flex justify-end mb-4"><button onClick={() => setIsAddingNewClient(!isAddingNewClient)} className="text-[10px] text-blue-600 underline uppercase flex items-center gap-1 font-black"><UserPlus size={14}/> {isAddingNewClient ? "Seleccionar de la lista" : "Registrar Socio Rápido"}</button></div>
                   <form className="space-y-6" onSubmit={async (e) => {
                     e.preventDefault();
                     const f = e.target;
@@ -288,7 +291,7 @@ const App = () => {
                     const rate = parseFloat(f.rate.value);
                     const type = f.type.value;
                     const total = amt * rate;
-                    if(type === 'compra' && total > balance.dop) { alert(`ERROR: Pesos insuficientes en caja.`); return; }
+                    if(type === 'compra' && total > balance.dop) { alert(`ERROR: Fondos insuficientes en Pesos.`); return; }
                     if(type === 'venta' && amt > balance.usd) { alert(`ERROR: Dólares insuficientes en stock.`); return; }
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'transactions'), { clientId: clientId || 'Invitado', type, amount: amt, rate, total, method: f.method.value, timestamp: new Date().toISOString(), date: new Date().toLocaleDateString('es-DO') });
                     const newB = type === 'compra' ? { dop: balance.dop - total, usd: balance.usd + amt } : { dop: balance.dop + total, usd: balance.usd - amt };
@@ -302,17 +305,17 @@ const App = () => {
                          <input required name="newPhone" placeholder="WhatsApp / Celular" className="w-full p-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-950 font-black shadow-inner outline-none focus:border-blue-500" />
                       </div>
                     ) : (
-                      <div className="space-y-1"><label className="text-[10px] uppercase font-black text-slate-950 ml-2 italic">Socio Comercial</label><select name="client" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] italic appearance-none focus:border-blue-500 outline-none text-slate-950 font-bold shadow-inner"><option value="">Público General / Invitado</option>{clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+                      <div className="space-y-1"><label className="text-[10px] uppercase font-black text-slate-950 ml-2 italic">Socio / Cliente</label><select name="client" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] italic appearance-none focus:border-blue-500 outline-none text-slate-950 font-bold shadow-inner"><option value="">Público General / Invitado</option>{clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
                     )}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1"><label className="text-[10px] uppercase font-black text-slate-950 ml-2 italic">Operación</label><select name="type" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] font-black text-slate-950 italic appearance-none"><option value="compra">Compra USD</option><option value="venta">Venta USD</option></select></div>
-                      <div className="space-y-1"><label className="text-[10px] uppercase font-black text-slate-950 ml-2 italic">Método</label><select name="method" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] font-black text-slate-950 italic appearance-none"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option></select></div>
+                      <div className="space-y-1"><label className="text-[10px] uppercase font-black text-slate-950 ml-2 italic">Operación</label><select name="type" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] font-black text-slate-950 italic appearance-none shadow-inner outline-none"><option value="compra">Compra USD</option><option value="venta">Venta USD</option></select></div>
+                      <div className="space-y-1"><label className="text-[10px] uppercase font-black text-slate-950 ml-2 italic">Método</label><select name="method" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] font-black text-slate-950 italic appearance-none shadow-inner outline-none"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option></select></div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1"><label className="text-[10px] uppercase font-black text-slate-950 ml-2 italic font-black">Monto (USD$)</label><input required name="amount" type="number" step="0.01" placeholder="0.00" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-xl font-black italic text-slate-950 shadow-inner" /></div>
+                      <div className="space-y-1"><label className="text-[10px] uppercase font-black text-slate-950 ml-2 italic font-black">Cantidad (USD$)</label><input required name="amount" type="number" step="0.01" placeholder="0.00" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-xl font-black italic text-slate-950 shadow-inner outline-none" /></div>
                       <div className="space-y-1 text-center"><label className="text-[10px] uppercase font-black text-slate-950 ml-2 italic block mb-1">Tasa Real Pactada</label><input required name="rate" type="number" step="0.01" defaultValue="59.50" className="w-full p-5 bg-blue-50 border-2 border-blue-200 rounded-[1.5rem] text-blue-700 text-3xl font-black text-center italic outline-none shadow-inner" /></div>
                     </div>
-                    <button type="submit" className="w-full bg-blue-600 text-white py-6 rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-700 active:scale-95 transition-all mt-4">Ejecutar y Guardar</button>
+                    <button type="submit" className="w-full bg-blue-600 text-white py-6 rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-700 active:scale-95 transition-all mt-4">Guardar en Cloud</button>
                   </form>
                </div>
             </div>
@@ -321,20 +324,20 @@ const App = () => {
           {showModal === 'update_capital' && (
             <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
                <div className="bg-white rounded-t-[2.5rem] sm:rounded-[3rem] w-full max-w-sm p-10 shadow-2xl border border-slate-100 font-bold">
-                  <h3 className="text-2xl font-black text-slate-950 mb-8 tracking-tighter text-center uppercase italic">Sincronizar Stock</h3>
+                  <h3 className="text-2xl font-black text-slate-950 mb-8 tracking-tighter text-center uppercase italic">Gestión de Stock</h3>
                   <div className="space-y-6">
-                     <div className="space-y-1"><label className="text-[10px] font-black uppercase tracking-widest ml-2 text-slate-950 italic">Suma/Resta RD$ Pesos</label><input type="number" step="0.01" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-black text-2xl text-center text-slate-950 shadow-inner italic" value={tempCapital.dop} onChange={e => setTempCapital({...tempCapital, dop: e.target.value})} placeholder="0.00" /></div>
-                     <div className="space-y-1"><label className="text-[10px] font-black uppercase tracking-widest ml-2 text-slate-950 italic">Suma/Resta USD$ Stock</label><input type="number" step="0.01" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-black text-2xl text-center text-slate-950 shadow-inner italic" value={tempCapital.usd} onChange={e => setTempCapital({...tempCapital, usd: e.target.value})} placeholder="0.00" /></div>
+                     <div className="space-y-1"><label className="text-[10px] font-black uppercase tracking-widest ml-2 text-slate-950 italic">Suma/Resta DOP Pesos</label><input type="number" step="0.01" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-black text-2xl text-center text-slate-950 shadow-inner italic" value={tempCapital.dop} onChange={e => setTempCapital({...tempCapital, dop: e.target.value})} placeholder="0.00" /></div>
+                     <div className="space-y-1"><label className="text-[10px] font-black uppercase tracking-widest ml-2 text-slate-950 italic">Suma/Resta USD Stock</label><input type="number" step="0.01" className="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none font-black text-2xl text-center text-slate-950 shadow-inner italic" value={tempCapital.usd} onChange={e => setTempCapital({...tempCapital, usd: e.target.value})} placeholder="0.00" /></div>
                   </div>
                   <div className="flex gap-4 mt-6">
-                     <button onClick={() => setShowModal(null)} className="flex-1 py-4 text-[10px] font-black uppercase text-slate-400 italic bg-slate-100 rounded-2xl">Cerrar</button>
+                     <button onClick={() => setShowModal(null)} className="flex-1 py-4 text-[10px] font-black uppercase text-slate-400 bg-slate-100 rounded-2xl">Cerrar</button>
                      <button onClick={async () => {
                         const newB = { dop: balance.dop + (parseFloat(tempCapital.dop) || 0), usd: balance.usd + (parseFloat(tempCapital.usd) || 0) };
                         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), { balance: newB });
                         setTempCapital({ dop: "", usd: "" }); setShowModal(null);
-                     }} className="flex-1 py-4 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl italic">Añadir</button>
+                     }} className="flex-1 py-4 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Confirmar</button>
                   </div>
-                  <div className="mt-8 pt-6 border-t border-slate-100 text-center"><button onClick={handleResetCapital} className="w-full py-4 text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-100 rounded-2xl uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-2"><Trash2 size={16}/> BORRAR TODO EL CAPITAL</button></div>
+                  <div className="mt-8 pt-6 border-t border-slate-100 text-center"><button onClick={handleResetCapital} className="w-full py-4 text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-100 rounded-2xl uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-2"><Trash2 size={16}/> RESTABLECER CAPITAL A CERO</button></div>
                </div>
             </div>
           )}
@@ -342,13 +345,13 @@ const App = () => {
           {activeTab === 'clients' && (
             <div className="animate-in slide-in-from-bottom-8 duration-700 space-y-8">
               <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-6 sm:p-10 rounded-[3rem] border-2 border-slate-100 shadow-sm gap-4">
-                 <h3 className="text-3xl sm:text-4xl font-black tracking-tighter uppercase italic text-slate-950">Directorio Cloud</h3>
+                 <h3 className="text-3xl sm:text-4xl font-black tracking-tighter uppercase italic text-slate-950">Directorio de Socios</h3>
                  <button onClick={() => setShowModal('transaction')} className="w-full sm:w-auto bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all flex items-center justify-center gap-2 italic"><UserPlus size={18}/> NUEVO SOCIO</button>
               </div>
               <div className="bg-white rounded-[3rem] shadow-xl overflow-hidden border-2 border-slate-100 text-slate-950">
                  <div className="overflow-x-auto"><table className="w-full text-left italic font-black min-w-[600px]">
                     <thead className="bg-slate-900 text-[10px] font-black text-white uppercase tracking-widest border-b border-slate-800">
-                       <tr><th className="p-8">Nombre del Socio</th><th className="p-8 text-center">WhatsApp / Teléfono</th><th className="p-8 text-center">Gestión</th></tr>
+                       <tr><th className="p-8">Nombre Completo</th><th className="p-8 text-center">WhatsApp / Teléfono</th><th className="p-8 text-center">Gestión</th></tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                        {clients.map(c => (
@@ -371,18 +374,18 @@ const App = () => {
                   <button onClick={generateDailyReport} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-600 transition-all shadow-md"><Printer size={16}/> Reporte Cierre</button>
                 </div>
                  <div className="overflow-x-auto"><table className="w-full text-left italic min-w-[900px]">
-                   <thead><tr className="text-slate-950 uppercase text-[10px] border-b-2 border-slate-100 tracking-widest font-black"><th className="pb-6">Fecha</th><th className="pb-6">Cliente</th><th className="pb-6 text-center">Tipo</th><th className="pb-6 text-center">Método</th><th className="pb-6 text-right">Monto USD$</th><th className="pb-6 text-right">Tasa Pactada</th><th className="pb-6 text-right">Total RD$</th><th className="pb-6 text-center">Acción</th></tr></thead>
+                   <thead><tr className="text-slate-950 uppercase text-[10px] border-b-2 border-slate-100 tracking-widest font-black"><th className="pb-6">Fecha</th><th className="pb-6">Cliente</th><th className="pb-6 text-center">Tipo</th><th className="pb-6 text-center">Método</th><th className="pb-6 text-right">USD$</th><th className="pb-6 text-right">Tasa Pactada</th><th className="pb-6 text-right">RD$ Total</th><th className="pb-6 text-center">Acción</th></tr></thead>
                    <tbody className="divide-y divide-slate-50 text-sm text-slate-950 font-black">
                      {transactions.map(t => (
                        <tr key={t.id} className="hover:bg-slate-50 transition-all group">
                          <td className="py-6 text-slate-400 not-italic text-[10px]">{t.date}</td>
                          <td className="py-6">{clients.find(c => c.id === t.clientId)?.name || 'Invitado'}</td>
-                         <td className="text-center"><span className={`px-4 py-1.5 rounded-xl text-[9px] uppercase ${t.type === 'compra' ? 'bg-emerald-500 text-white' : 'bg-blue-600 text-white'}`}>{t.type}</span></td>
+                         <td className="text-center"><span className={`px-4 py-1.5 rounded-xl text-[9px] uppercase ${t.type === 'compra' ? 'bg-emerald-500 text-white shadow-md' : 'bg-blue-600 text-white shadow-md'}`}>{t.type}</span></td>
                          <td className="text-center text-[9px] uppercase text-slate-400">{t.method || 'Efectivo'}</td>
                          <td className="py-6 text-right text-lg text-slate-950 font-black italic tracking-tighter">${Number(t.amount).toLocaleString()}</td>
                          <td className="py-6 text-right text-slate-400">RD$ {Number(t.rate).toFixed(2)}</td>
                          <td className="py-6 text-right text-xl text-blue-600 tracking-tighter">RD$ {Number(t.total).toLocaleString()}</td>
-                         <td className="py-6 text-center flex justify-center gap-2"><button onClick={() => setPrintData({type: 'receipt', data: t})} className="p-2 text-slate-400 hover:text-blue-600 transition-colors"><Printer size={20}/></button><button onClick={() => handleDeleteTransaction(t)} className="p-2 text-rose-300 hover:text-rose-600 transition-colors"><Trash2 size={20}/></button></td>
+                         <td className="py-6 text-center flex justify-center gap-2"><button onClick={() => setPrintData({type: 'receipt', data: t})} className="p-2 text-slate-400 hover:text-blue-600 transition-colors" title="Imprimir Recibo"><Printer size={20}/></button><button onClick={() => handleDeleteTransaction(t)} className="p-2 text-rose-300 hover:text-rose-600 transition-colors" title="Eliminar y Revertir"><Trash2 size={20}/></button></td>
                        </tr>
                      ))}
                    </tbody>
@@ -402,11 +405,10 @@ const App = () => {
               <div className="flex justify-between items-center border-b-4 border-blue-600 pb-8 mb-8">
                 <div className="flex items-center gap-5">
                   <div className="bg-slate-900 p-5 rounded-2xl text-white shadow-xl">
-                    {/* LOGO CORPORATIVO SVG */}
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5M8 21H3v-5M8 3H3v5M16 21h5v-5M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path d="M12 12V3M12 21v-9M12 12H3M21 12h-9"/></svg>
                   </div>
                   <div>
-                    <h1 className="text-4xl font-black tracking-tighter uppercase text-slate-900 leading-none mb-1">JUAN SANTOS</h1>
+                    <h1 className="text-3xl font-black tracking-tighter uppercase text-slate-900 leading-none mb-1">JUAN SANTOS</h1>
                     <p className="text-[11px] font-black uppercase tracking-[0.4em] text-blue-600 mb-3 italic">Business Financial</p>
                     <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
                       Plaza Magalis, Frente a Domino's Pizza<br/>La Vega, República Dominicana<br/>
@@ -415,27 +417,27 @@ const App = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <h2 className="text-3xl font-black uppercase text-slate-200 mb-2 tracking-tighter">RECIBO</h2>
-                  <p className="text-xs font-black text-slate-800 uppercase tracking-widest">Ticket: {printData.data.id?.substring(0,8).toUpperCase()}</p>
+                  <h2 className="text-3xl font-black uppercase text-slate-200 mb-2 tracking-tighter leading-none">RECIBO<br/><span className="text-[10px] text-slate-400">PAGO CONFIRMADO</span></h2>
+                  <p className="text-xs font-black text-slate-800 uppercase tracking-widest">NÚMERO DE TRANSACCIÓN: {printData.data.id?.substring(0,8).toUpperCase()}</p>
                   <p className="text-xs font-bold text-slate-400 mt-1 uppercase">Fecha: {printData.data.date}</p>
                 </div>
               </div>
 
               <div className="mb-8 bg-blue-50/50 p-6 rounded-2xl border border-blue-100 flex justify-between items-center">
                 <div>
-                  <p className="text-[10px] text-blue-600 uppercase font-black tracking-[0.3em] mb-1">Socio Comercial</p>
+                  <p className="text-[10px] text-blue-600 uppercase font-black tracking-[0.3em] mb-1">Socio / Cliente</p>
                   <p className="text-2xl font-black text-slate-900 uppercase">{clients.find(c => c.id === printData.data.clientId)?.name || 'Cliente Casual'}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Cajero / Firma</p>
-                  <p className="text-sm font-black text-slate-900 uppercase">JUAN SANTOS ADMIN</p>
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Cajero Encargado</p>
+                  <p className="text-sm font-black text-slate-900 uppercase">Administración Central</p>
                 </div>
               </div>
 
               <table className="w-full text-left mb-10 border-collapse">
                 <thead>
                   <tr className="border-b-2 border-slate-900 text-slate-900">
-                    <th className="py-4 px-2 text-[11px] font-black uppercase tracking-widest">Detalle de Operación</th>
+                    <th className="py-4 px-2 text-[11px] font-black uppercase tracking-widest">Descripción de Cambio</th>
                     <th className="py-4 px-2 text-[11px] font-black uppercase tracking-widest text-center">Modo</th>
                     <th className="py-4 px-2 text-[11px] font-black uppercase tracking-widest text-right">Tasa</th>
                     <th className="py-4 px-2 text-[11px] font-black uppercase tracking-widest text-right">Importe USD$</th>
@@ -453,62 +455,58 @@ const App = () => {
 
               <div className="flex justify-end mb-16">
                 <div className="w-2/3 bg-slate-900 text-white p-6 rounded-2xl flex justify-between items-center shadow-xl">
-                  <span className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">Total Transacción</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Total Transado</span>
                   <span className="text-3xl font-black tracking-tighter">RD$ {Number(printData.data.total).toLocaleString()}</span>
                 </div>
               </div>
-
-              <div className="pt-10 flex justify-between px-10 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-                <div><div className="w-48 border-b-2 border-slate-200 mb-3 mx-auto"></div>Control Interno</div>
-                <div><div className="w-48 border-b-2 border-slate-200 mb-3 mx-auto"></div>Socio / Cliente</div>
-              </div>
               
-              <div className="mt-12 pt-6 border-t border-slate-100 text-center text-[9px] text-slate-400 font-black uppercase tracking-[0.3em]">
-                Certificado por Juan Santos Business Financial System • v10.5
+              <div className="mt-12 pt-6 border-t border-slate-100 text-center text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">
+                Juan Santos Business Financial - La Vega, República Dominicana
               </div>
             </div>
           )}
 
           {printData.type === 'report' && (
-            <div className="w-full max-w-4xl mx-auto bg-white p-12 mt-6 border-2 border-slate-100 rounded-3xl" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+            <div className="w-full max-w-4xl mx-auto bg-white p-12 mt-4 relative border-2 border-slate-100 rounded-3xl" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+              
               <div className="flex justify-between items-end border-b-4 border-blue-600 pb-8 mb-10">
                 <div className="flex items-center gap-5">
                   <div className="bg-slate-900 p-5 rounded-2xl text-white shadow-xl">
-                    <BarChart3 size={32} className="text-blue-400" />
+                    <Activity size={32} className="text-blue-400" />
                   </div>
                   <div>
                     <h1 className="text-4xl font-black tracking-tighter uppercase text-slate-900 mb-1 leading-none">JUAN SANTOS</h1>
-                    <p className="text-xs font-black uppercase tracking-[0.4em] text-blue-600 italic">Reporte Maestro de Cierre</p>
+                    <p className="text-xs font-black uppercase tracking-[0.3em] text-blue-600">Business Financial - Cierre de Caja</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-base font-black text-slate-800 uppercase tracking-widest">Corte: {printData.date}</p>
+                  <p className="text-sm font-black text-slate-800 uppercase tracking-widest">Corte del Día: {printData.date}</p>
                   <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-widest">Generado: {new Date().toLocaleTimeString()}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-6 mb-12">
-                 <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl text-center"><p className="text-[10px] uppercase font-black text-slate-400 tracking-[0.3em] mb-2">Efectivo DOP Final</p><p className="text-3xl font-black text-slate-900 tracking-tighter leading-none italic">RD$ {balance.dop.toLocaleString()}</p></div>
-                 <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl text-center"><p className="text-[10px] uppercase font-black text-slate-400 tracking-[0.3em] mb-2">Stock USD Final</p><p className="text-3xl font-black text-slate-900 tracking-tighter leading-none italic">USD$ {balance.usd.toLocaleString()}</p></div>
+                 <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl text-center"><p className="text-[10px] uppercase font-black text-slate-500 tracking-[0.2em] mb-2">DOP Final en Caja</p><p className="text-3xl font-black text-slate-900 tracking-tighter leading-none italic">RD$ {balance.dop.toLocaleString()}</p></div>
+                 <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl text-center"><p className="text-[10px] uppercase font-black text-slate-500 tracking-[0.3em] mb-2">Stock USD Final</p><p className="text-3xl font-black text-slate-900 tracking-tighter leading-none italic">USD$ {balance.usd.toLocaleString()}</p></div>
                  <div className="bg-blue-600 p-6 rounded-2xl text-white shadow-lg text-center"><p className="text-[10px] uppercase font-black tracking-[0.3em] mb-2 text-blue-200">Operaciones Hoy</p><p className="text-4xl font-black tracking-tighter leading-none italic">{printData.data.length}</p></div>
               </div>
 
               <table className="w-full text-left text-[11px] border-2 border-slate-100 rounded-3xl overflow-hidden font-black uppercase tracking-widest italic">
-                <thead className="bg-slate-900 text-white"><tr className="font-black border-b border-slate-800"><th className="p-4">ID</th><th className="p-4">Socio</th><th className="p-4 text-center">Tipo</th><th className="p-4 text-center">Método</th><th className="p-4 text-right">USD$</th><th className="p-4 text-right">Total RD$</th></tr></thead>
+                <thead className="bg-slate-900 text-white"><tr className="font-black border-b border-slate-800"><th className="p-4">ID Trans.</th><th className="p-4">Socio</th><th className="p-4 text-center">Tipo</th><th className="p-4 text-center">Método</th><th className="p-4 text-right">USD$</th><th className="p-4 text-right">Total RD$</th></tr></thead>
                 <tbody className="divide-y divide-slate-100 text-slate-900">
                   {printData.data.map(t => (
                     <tr key={t.id} className="hover:bg-slate-50">
-                      <td className="p-4 font-black text-slate-400">{t.id.substring(0,6).toUpperCase()}</td>
-                      <td className="p-4 font-black text-slate-900">{clients.find(c => c.id === t.clientId)?.name || 'Invitado'}</td>
-                      <td className="p-4 text-center"><span className="bg-slate-100 px-3 py-1 rounded-lg text-[9px]">{t.type}</span></td>
+                      <td className="p-4 font-black text-slate-400">{t.id.substring(0,8).toUpperCase()}</td>
+                      <td className="p-4 uppercase font-black">{clients.find(c => c.id === t.clientId)?.name || 'Invitado'}</td>
+                      <td className="p-4 text-center uppercase"><span className="bg-slate-100 px-3 py-1 rounded-lg text-[9px]">{t.type}</span></td>
                       <td className="p-4 text-center text-slate-400">{t.method || 'Efectivo'}</td>
-                      <td className="p-4 text-right">${Number(t.amount).toLocaleString()}</td>
-                      <td className="p-4 text-right text-blue-600">RD$ {Number(t.total).toLocaleString()}</td>
+                      <td className="p-4 text-right font-black">${Number(t.amount).toLocaleString()}</td>
+                      <td className="p-4 text-right text-blue-600 tracking-tighter text-sm font-black italic leading-none">RD$ {Number(t.total).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="mt-16 pt-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] border-t-2 border-slate-100">Cierre de Caja Maestro - Juan Santos Business Financial</div>
+              <div className="mt-16 pt-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] border-t-2 border-slate-100 italic">Reporte Maestro Juan Santos Business Financial</div>
             </div>
           )}
         </div>
