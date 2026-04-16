@@ -171,7 +171,20 @@ const App = () => {
   const generateDailyReport = () => {
     const today = new Date().toLocaleDateString('es-DO');
     const todayTx = transactions.filter(t => t.date === today);
-    setPrintData({ type: 'report', date: today, data: todayTx });
+    
+    // Calcular métricas exactas del día
+    const dailySells = todayTx.filter(t => t.type === 'venta');
+    const dailyProfit = dailySells.reduce((acc, t) => acc + (Number(t.amount) * (Number(t.rate) - metrics.avgBuyCost)), 0);
+    const dailyCapitalSold = dailySells.reduce((acc, t) => acc + (Number(t.amount) * metrics.avgBuyCost), 0);
+    const dailyROI = dailyCapitalSold > 0 ? (dailyProfit / dailyCapitalSold) * 100 : 0;
+
+    setPrintData({ 
+      type: 'report', 
+      date: today, 
+      data: todayTx,
+      dailyProfit,
+      dailyROI
+    });
   };
 
   const exportCSV = () => {
@@ -485,10 +498,15 @@ const App = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-6 mb-12">
-                 <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl text-center"><p className="text-[10px] uppercase font-black text-slate-500 tracking-[0.2em] mb-2">DOP Final en Caja</p><p className="text-3xl font-black text-slate-900 tracking-tighter leading-none italic">RD$ {balance.dop.toLocaleString()}</p></div>
-                 <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl text-center"><p className="text-[10px] uppercase font-black text-slate-500 tracking-[0.3em] mb-2">Stock USD Final</p><p className="text-3xl font-black text-slate-900 tracking-tighter leading-none italic">USD$ {balance.usd.toLocaleString()}</p></div>
-                 <div className="bg-blue-600 p-6 rounded-2xl text-white shadow-lg text-center"><p className="text-[10px] uppercase font-black tracking-[0.3em] mb-2 text-blue-200">Operaciones Hoy</p><p className="text-4xl font-black tracking-tighter leading-none italic">{printData.data.length}</p></div>
+              <div className="grid grid-cols-3 gap-6 mb-6">
+                 <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl text-center"><p className="text-[10px] uppercase font-black text-slate-500 tracking-[0.2em] mb-2">DOP Final en Caja</p><p className="text-2xl font-black text-slate-900 tracking-tighter leading-none italic">RD$ {balance.dop.toLocaleString()}</p></div>
+                 <div className="bg-slate-50 border-2 border-slate-100 p-6 rounded-2xl text-center"><p className="text-[10px] uppercase font-black text-slate-500 tracking-[0.3em] mb-2">Stock USD Final</p><p className="text-2xl font-black text-slate-900 tracking-tighter leading-none italic">USD$ {balance.usd.toLocaleString()}</p></div>
+                 <div className="bg-slate-100 border-2 border-slate-200 p-6 rounded-2xl text-center"><p className="text-[10px] uppercase font-black text-slate-500 tracking-[0.3em] mb-2">Operaciones Hoy</p><p className="text-2xl font-black text-slate-900 tracking-tighter leading-none italic">{printData.data.length}</p></div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 mb-12">
+                 <div className="bg-emerald-50 border-2 border-emerald-100 p-6 rounded-2xl text-center shadow-sm"><p className="text-[10px] uppercase font-black text-emerald-600 tracking-[0.3em] mb-2">Ganancia Generada Hoy</p><p className="text-4xl font-black text-emerald-700 tracking-tighter leading-none italic">RD$ {printData.dailyProfit?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) || "0.00"}</p></div>
+                 <div className="bg-blue-600 p-6 rounded-2xl text-white shadow-lg text-center"><p className="text-[10px] uppercase font-black tracking-[0.3em] mb-2 text-blue-200">Rendimiento / ROI Diario</p><p className="text-4xl font-black tracking-tighter leading-none italic">{printData.dailyROI?.toFixed(2) || "0.00"}%</p></div>
               </div>
 
               <table className="w-full text-left text-[11px] border-2 border-slate-100 rounded-3xl overflow-hidden font-black uppercase tracking-widest italic">
